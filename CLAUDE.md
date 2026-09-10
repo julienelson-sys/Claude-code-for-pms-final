@@ -131,6 +131,44 @@ chains (Supply). Exploring for Q4: handler phone app (Supply), shared cover
 (Dispatch). Committed items against a numbered release are locked; changes go
 through Product.
 
+### What we established on 10 September
+
+- **It is not seasonal.** Weekly offer volume is flat (172 → 165). A
+  seasonal lull means fewer incidents; incidents didn't fall. Kip's
+  interview settles it: Meteor Mite near zero and The Gale at a record
+  in the *same week, same city*.
+- **Aggregate acceptance:** 75–78% baseline → **54.2%** the week of
+  release → 72.7% on 31 Aug. Recovering, not recovered.
+- **Four responders are frozen out:** Farlight, Meteor Mite, The
+  Undertow, Vesper. From ~12 offers/week to 0–1, and **zero accepted in
+  the last two weeks.** Revenue-bearing — Rook bills per active responder.
+- **The defect chain** (in `00-rook/code/dispatch-routing/`): timeout cut
+  90s → 60s; `record_declined()` scores a timeout identically to a
+  refusal; penalty 0.12 vs credit 0.08; **no decay** (Wen's TODO, open
+  since 2019); floor 0.0. Recovery needs offers you no longer receive —
+  an absorbing state. The fix is small and **does not require touching
+  the proximity rebalance**, so it isn't a revert conversation.
+- **Routing config ships in the release**, not as a runtime setting — so
+  there is no hotfix path for the timeout. Affects how early P0 must start.
+- **The ticket queue points at the wrong people.** Meteor Mite and Vesper
+  have **zero tickets** between them. Kip, Aunt Dot and Halloran filed
+  nothing all month. 1 High in 25 tickets. Severity is filer-assigned.
+- **Tickets and the CSV disagree, and both may be right.** They agree at
+  the extremes and diverge only in the middle band (Nightwell, Ironvale,
+  Stormwrack, Cindermark, The Drift report drought while offers rose).
+  Candidates: weekly buckets hiding straddling gaps; offers dispatched but
+  never delivered to the phone; salience.
+- **Treat `callout-history.csv` as unverified.** It cannot split declines
+  from timeouts, which the glossary says the real data does — so it is not
+  the official reporting. Marcus, 18 Aug: *"it won't be the real weekly
+  numbers."* Confirm provenance before relying on it again.
+- **Three asks for Ravi, none yet made:** day-level offers per responder;
+  delivery confirmations vs offers dispatched; decline/timeout split. Plus
+  August 2025 to retire seasonality by evidence.
+- **Halloran's requisition evidence belongs to Supply** — one queue, the
+  priority field does nothing, 11 days on a cracked vest plate. Unrelated
+  to 4.2; it's unsolicited support for the Committed 4.3 item. Hand it over.
+
 ### Open threads I inherited
 
 - **Availability Confidence appears to have silently slipped 4.2.** Priya flagged
