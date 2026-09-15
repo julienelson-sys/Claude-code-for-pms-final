@@ -169,6 +169,36 @@ through Product.
   priority field does nothing, 11 days on a cracked vest plate. Unrelated
   to 4.2; it's unsolicited support for the Committed 4.3 item. Hand it over.
 
+### What we established on 15 September
+
+- **Found the exact fix location.** `offer.py`'s `offer_to()` already returns
+  three distinct outcomes — `ACCEPTED`, `DECLINED`, `NO_ANSWER`. The
+  distinction is thrown away one line later: `dispatch()` calls
+  `history.record_declined(responder)` for both `DECLINED` and
+  `NO_ANSWER`. This is not new instrumentation — it's a two-line fix to
+  stop discarding a value the system already has.
+- **Priya's seasonal read does not hold up.** Total offer volume is flat
+  (~172/wk → ~165/wk) but redistributed, not reduced: four responders
+  collapsed to near-zero while two (Nightwell, The Gale) rose ~24%.
+  15 of 16 responders' acceptance rates fell, including ones getting
+  *more* work — not consistent with fewer incidents. Kip's two
+  responders, same city same week, went opposite directions. Her
+  confound-spotting (two changes in one release) and her advice not to
+  revert both still stand — just not for the seasonal reason she gave.
+- **Manual routing override exists, but only in the console** — nothing
+  in `dispatch-routing/` decides *whether* someone's asked, only the
+  order (confirmed across all five files: config, routing, offer,
+  history, availability). Audit-logged since 4.0. No evidence Aunt Dot
+  ever used it for Vesper, and it wouldn't have mattered if she had — an
+  override is per-incident and doesn't touch the recent-acceptance
+  score, so it can't undo the frozen state.
+- **Vesper, traced week by week, confirms the mechanism end-to-end:**
+  steady ~82% acceptance for six weeks → drops to 50% the week 4.2 ships
+  while still offered a normal volume (the timeout bite) → offers
+  themselves collapse to near-zero the next two weeks (the scoring
+  lock-out). Good reference case if this needs to be explained to
+  someone with one concrete example instead of an aggregate.
+
 ### Open threads I inherited
 
 - **Availability Confidence appears to have silently slipped 4.2.** Priya flagged
