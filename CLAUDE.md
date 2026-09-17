@@ -199,6 +199,41 @@ through Product.
   lock-out). Good reference case if this needs to be explained to
   someone with one concrete example instead of an aggregate.
 
+### What we established on 17 September
+
+- **Full pipeline, mapped to files:** `availability.py` (who's free,
+  where) → `routing.py` (score each candidate, sort into a ranked
+  list) → `offer.py` (send the offer, run the clock, walk down the
+  list) → `history.py` (adjust the score after). `config.py` holds
+  every dial for all of it.
+- **Exactly one credit mechanism, one penalty mechanism** — confirmed
+  by reading the whole file, not assuming: `record_accepted` is the
+  only thing that ever raises the score (+0.08). `record_declined`
+  is the only thing that lowers it (−0.12), and it fires for both an
+  actual decline and a timeout.
+- **The proximity/acceptance weight shift, precisely:** near-even
+  before 4.2 (proximity 0.45, acceptance 0.40); since 4.2, proximity
+  outweighs acceptance ~2.4x (0.60 vs 0.25). **Caveat that matters:**
+  at the floor (score = 0) the reweighting adds no extra damage — zero
+  times any weight is still zero. It isn't the primary driver of the
+  freeze-out; the missed-offer penalty with no decay is.
+- **Recommended path to unfreeze the four responders:** ask Marcus/Wen
+  whether their scores can be reset directly as a data fix, or whether
+  it needs a deploy — that answer decides how fast this can move. A
+  reset alone will erode again unless the scoring fix ships alongside
+  it. Manual override (console-level, audited since 4.0) is a
+  same-week stopgap only — confirmed it never touches the score, so it
+  doesn't fix anything, just bridges the gap for one job at a time.
+- **Other things worth raising as PM, from the code itself:** no
+  runtime toggle for any of these values — a bad tuning change is
+  all-or-nothing across every responder, no gradual rollout, no fast
+  revert short of another release. The config file's protection is a
+  comment asking people to tell Marcus, not an enforced control. The
+  2019 decay TODO is a fully-scoped decision waiting on someone to
+  make it, not new work to scope. "Nobody is ever removed" is true of
+  the code and false in effect — worth pre-empting before it becomes a
+  miscommunication with engineering.
+
 ### Open threads I inherited
 
 - **Availability Confidence appears to have silently slipped 4.2.** Priya flagged
