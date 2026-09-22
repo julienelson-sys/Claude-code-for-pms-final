@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Response Standing — prototype</title>
+<style>
+  :root {
+    --ink: #1c1f24;
+    --muted: #6b7280;
+    --line: #e3e6ea;
+    --paper: #ffffff;
+    --bg: #f4f5f7;
+    --recovering: #a8781f;
+    --recovering-bg: #fbf1e1;
+    --steady: #2f6b4f;
+    --steady-bg: #e9f4ee;
+    --accent: #1c1f24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 24px 80px;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--ink);
+  }
+  header.page {
+    max-width: 940px;
+    margin: 0 auto 28px;
+  }
+  header.page h1 {
+    font-size: 22px;
+    margin: 0 0 6px;
+  }
+  header.page p {
+    color: var(--muted);
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 640px;
+  }
+  .toggle-row {
+    max-width: 940px;
+    margin: 0 auto 36px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .toggle-row span {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  button#toggle {
+    border: 1px solid var(--line);
+    background: var(--paper);
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button#toggle:hover { border-color: #b9bec6; }
+
+  .stage {
+    max-width: 940px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .stage { grid-template-columns: 1fr; }
+  }
+
+  .panel-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+
+  /* ---------- Phone mockup ---------- */
+  .phone {
+    background: #111317;
+    border-radius: 34px;
+    padding: 10px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+  }
+  .phone-screen {
+    background: var(--paper);
+    border-radius: 26px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 460px;
+  }
+  .phone-notch {
+    width: 60px;
+    height: 5px;
+    background: #2b2e34;
+    border-radius: 3px;
+    margin: 10px auto 4px;
+  }
+  .phone-header {
+    padding: 6px 16px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .phone-header .app-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+  .phone-header .screen-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .phone-body {
+    flex: 1;
+    padding: 16px;
+  }
+  .standing-card {
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+    transition: background 0.25s ease;
+  }
+  .standing-card .status {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .standing-card .detail {
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .standing-card.steady { background: var(--steady-bg); }
+  .standing-card.steady .status { color: var(--steady); }
+  .standing-card.steady .detail { color: #3d5c4d; }
+  .standing-card.recovering { background: var(--recovering-bg); }
+  .standing-card.recovering .status { color: var(--recovering); }
+  .standing-card.recovering .detail { color: #6b5230; }
+
+  .avail-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .avail-toggle-row .lbl { color: var(--muted); }
+  .pill {
+    width: 34px;
+    height: 20px;
+    background: var(--steady);
+    border-radius: 999px;
+    position: relative;
+  }
+  .pill::after {
+    content: "";
+    position: absolute;
+    top: 2px; right: 2px;
+    width: 16px; height: 16px;
+    background: #fff;
+    border-radius: 50%;
+  }
+
+  .offer-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .offer-card .title {
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .phone-tabbar {
+    display: flex;
+    border-top: 1px solid var(--line);
+  }
+  .phone-tabbar div {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px 12px;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .phone-tabbar div.active {
+    color: var(--ink);
+  }
+  .phone-tabbar div.active::before {
+    content: "●";
+    display: block;
+    font-size: 8px;
+    margin-bottom: 3px;
+  }
+  .phone-tabbar div:not(.active)::before {
+    content: "○";
+    display: block;
+    font-size: 8px;
+    margin-bottom: 3px;
+    color: var(--line);
+  }
+
+  /* ---------- Console mockup ---------- */
+  .console-frame {
+    background: var(--paper);
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    overflow: hidden;
+  }
+  .console-topbar {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 12px 22px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .console-topbar .product {
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .console-topbar .tab {
+    color: var(--muted);
+    padding: 4px 2px;
+    border-bottom: 2px solid transparent;
+  }
+  .console-topbar .tab.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-bottom: 2px solid var(--ink);
+  }
+  .console-body { padding: 20px 22px; }
+  .console-body h2 {
+    font-size: 15px;
+    margin: 0 0 4px;
+  }
+  .console-body .sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+  .roster-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 13px 0;
+    border-top: 1px solid var(--line);
+    cursor: default;
+  }
+  .roster-row.clickable { cursor: pointer; }
+  .roster-row.clickable:hover { background: #fafafa; }
+  .roster-row:first-of-type { border-top: none; }
+  .roster-row .name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .roster-row .name .role {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .chip {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 11px;
+    border-radius: 999px;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  .chip.steady { background: var(--steady-bg); color: var(--steady); }
+  .chip.recovering { background: var(--recovering-bg); color: var(--recovering); }
+
+  .detail-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .detail-panel.open {
+    max-height: 160px;
+    padding-bottom: 14px;
+  }
+  .detail-panel .inner {
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+    margin-top: 2px;
+  }
+  .hint-click {
+    font-size: 11px;
+    color: #9aa1ab;
+    margin-left: 6px;
+  }
+
+  footer {
+    max-width: 940px;
+    margin: 40px auto 0;
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1>Response Standing — clickable mockup</h1>
+  <p>Two screens, one underlying status, shown where each person would
+  actually encounter it. Click the roster row for Vesper to see his
+  detail open, or use the button below to simulate his standing
+  changing on both screens at once.</p>
+</header>
+
+<div class="toggle-row">
+  <button id="toggle">Simulate: standing changes to Recovering</button>
+  <span id="toggle-hint">Currently showing: Steady</span>
+</div>
+
+<div class="stage">
+  <div>
+    <p class="panel-label">Vesper's phone — Availability screen</p>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="phone-notch"></div>
+        <div class="phone-header">
+          <div class="app-name">ROOK DISPATCH</div>
+          <div class="screen-title">Availability</div>
+        </div>
+
+        <div class="phone-body">
+          <div class="avail-toggle-row">
+            <span class="lbl">Available for callouts</span>
+            <div class="pill"></div>
+          </div>
+
+          <div class="standing-card steady" id="standing-card">
+            <p class="status" id="standing-status">Response standing: Steady</p>
+            <p class="detail" id="standing-detail">You're in normal rotation. Nothing to do here.</p>
+          </div>
+
+          <div class="offer-card">
+            <div class="title">No active offer</div>
+            Callouts will appear here when one comes in.
+          </div>
+        </div>
+
+        <div class="phone-tabbar">
+          <div>Offers</div>
+          <div class="active">Availability</div>
+          <div>History</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="panel-label">Aunt Dot's screen — Dispatch console</p>
+    <div class="console-frame">
+      <div class="console-topbar">
+        <span class="product">Rook Dispatch</span>
+        <span class="tab active">Coverage</span>
+        <span class="tab">Incidents</span>
+        <span class="tab">Responders</span>
+      </div>
+      <div class="console-body">
+        <h2>Coverage — your roster</h2>
+        <p class="sub">Response standing, at a glance. Click a name for detail.</p>
+
+        <div class="roster-row clickable" id="vesper-row">
+          <div class="name">Vesper<span class="role">Handled by you</span><span class="hint-click">click for detail</span></div>
+          <div class="chip steady" id="console-chip">Steady</div>
+        </div>
+        <div class="detail-panel" id="vesper-detail">
+          <div class="inner" id="vesper-detail-text">
+            Taking offers normally. No action needed.
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <div class="name">The Gale<span class="role">Handled by Kip</span></div>
+          <div class="chip steady">Steady</div>
+        </div>
+        <div class="roster-row">
+          <div class="name">Nightwell<span class="role">Handled by Marjorie Sung</span></div>
+          <div class="chip steady">Steady</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Only the standing card, the chip, and Vesper's roster row respond —
+  the tabs and the availability switch are static chrome, there to
+  show which real screen this lives on: the responder's Availability
+  screen, and the handler's Coverage view. This file is static markup,
+  not a connected build; it exists to make the two-screen idea
+  concrete enough to click through, not to demonstrate working
+  software. See <strong>brief.md</strong> for the reasoning.
+</footer>
+
+<script>
+  const btn = document.getElementById('toggle');
+  const hint = document.getElementById('toggle-hint');
+  const card = document.getElementById('standing-card');
+  const status = document.getElementById('standing-status');
+  const detail = document.getElementById('standing-detail');
+  const chip = document.getElementById('console-chip');
+  const detailPanel = document.getElementById('vesper-detail');
+  const detailText = document.getElementById('vesper-detail-text');
+  const vesperRow = document.getElementById('vesper-row');
+
+  let recovering = false;
+
+  const STEADY_DETAIL = "You're in normal rotation. Nothing to do here.";
+  const RECOVERING_DETAIL = "You're seeing fewer offers because of missed responses recently. This rebuilds as you take on new ones.";
+  const STEADY_CONSOLE_DETAIL = "Taking offers normally. No action needed.";
+  const RECOVERING_CONSOLE_DETAIL = "Fewer offers reaching Vesper lately due to missed responses. Standing rebuilds on its own as he takes new offers — no action needed from you.";
+
+  function render() {
+    if (recovering) {
+      card.className = 'standing-card recovering';
+      status.textContent = 'Response standing: Recovering';
+      detail.textContent = RECOVERING_DETAIL;
+      chip.className = 'chip recovering';
+      chip.textContent = 'Recovering';
+      detailText.textContent = RECOVERING_CONSOLE_DETAIL;
+      btn.textContent = 'Simulate: standing changes to Steady';
+      hint.textContent = 'Currently showing: Recovering';
+    } else {
+      card.className = 'standing-card steady';
+      status.textContent = 'Response standing: Steady';
+      detail.textContent = STEADY_DETAIL;
+      chip.className = 'chip steady';
+      chip.textContent = 'Steady';
+      detailText.textContent = STEADY_CONSOLE_DETAIL;
+      btn.textContent = 'Simulate: standing changes to Recovering';
+      hint.textContent = 'Currently showing: Steady';
+    }
+  }
+
+  btn.addEventListener('click', () => {
+    recovering = !recovering;
+    render();
+  });
+
+  vesperRow.addEventListener('click', () => {
+    detailPanel.classList.toggle('open');
+  });
+</script>
+
+</body>
+</html>
