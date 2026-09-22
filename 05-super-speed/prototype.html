@@ -14,7 +14,7 @@
     --recovering-bg: #fbf1e1;
     --steady: #2f6b4f;
     --steady-bg: #e9f4ee;
-    --accent: #1c1f24;
+    --track: #d8dbe0;
   }
   * { box-sizing: border-box; }
   body {
@@ -37,7 +37,7 @@
     margin: 0;
     font-size: 14px;
     line-height: 1.5;
-    max-width: 640px;
+    max-width: 660px;
   }
   .toggle-row {
     max-width: 940px;
@@ -95,7 +95,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-height: 460px;
+    min-height: 500px;
   }
   .phone-notch {
     width: 60px;
@@ -122,7 +122,11 @@
   .phone-body {
     flex: 1;
     padding: 16px;
+    overflow-y: auto;
   }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
   .standing-card {
     border-radius: 14px;
     padding: 16px;
@@ -190,30 +194,114 @@
     display: flex;
     border-top: 1px solid var(--line);
   }
-  .phone-tabbar div {
+  .phone-tabbar button {
     flex: 1;
     text-align: center;
     padding: 10px 4px 12px;
     font-size: 11px;
     color: var(--muted);
     font-weight: 600;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
   }
-  .phone-tabbar div.active {
-    color: var(--ink);
+  .phone-tabbar button.active { color: var(--ink); }
+  .phone-tabbar button.active::before {
+    content: "●"; display: block; font-size: 8px; margin-bottom: 3px;
   }
-  .phone-tabbar div.active::before {
-    content: "●";
-    display: block;
-    font-size: 8px;
-    margin-bottom: 3px;
+  .phone-tabbar button:not(.active)::before {
+    content: "○"; display: block; font-size: 8px; margin-bottom: 3px; color: var(--line);
   }
-  .phone-tabbar div:not(.active)::before {
-    content: "○";
-    display: block;
-    font-size: 8px;
-    margin-bottom: 3px;
-    color: var(--line);
+
+  /* ---------- Activity chart (shared: phone + console) ---------- */
+  .chart-intro {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 0 14px;
   }
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .chart-legend .key { display: flex; align-items: center; gap: 6px; }
+  .chart-legend .swatch { width: 9px; height: 9px; border-radius: 2px; }
+  .swatch.taken { background: var(--steady); }
+  .swatch.rest { background: var(--track); }
+
+  .chart-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: var(--chart-h, 70px);
+    margin-bottom: 4px;
+  }
+  .bar-wrap {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    outline: none;
+  }
+  .bar-track {
+    width: 100%;
+    max-width: 22px;
+    margin: 0 auto;
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+    background: var(--track);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .bar-fill { width: 100%; background: var(--steady); }
+  .bar-wrap:hover .bar-track,
+  .bar-wrap:focus .bar-track { filter: brightness(0.94); }
+
+  .chart-axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #9aa1ab;
+    margin-bottom: 14px;
+  }
+
+  .chart-tooltip {
+    position: fixed;
+    background: var(--ink);
+    color: #fff;
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    line-height: 1.4;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -100%);
+    transition: opacity 0.1s ease;
+    z-index: 50;
+    white-space: nowrap;
+  }
+  .chart-tooltip.show { opacity: 1; }
+  .chart-tooltip .v { font-weight: 700; }
+  .chart-tooltip .l { color: #b8bcc4; font-size: 11px; }
+
+  .activity-list {
+    border-top: 1px solid var(--line);
+    margin-top: 4px;
+    font-size: 12.5px;
+  }
+  .activity-list .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .activity-list .row span:last-child { color: var(--ink); font-weight: 600; }
 
   /* ---------- Console mockup ---------- */
   .console-frame {
@@ -296,8 +384,8 @@
     line-height: 1.6;
   }
   .detail-panel.open {
-    max-height: 160px;
-    padding-bottom: 14px;
+    max-height: 260px;
+    padding-bottom: 16px;
   }
   .detail-panel .inner {
     border-top: 1px dashed var(--line);
@@ -324,9 +412,9 @@
 <header class="page">
   <h1>Response Standing — clickable mockup</h1>
   <p>Two screens, one underlying status, shown where each person would
-  actually encounter it. Click the roster row for Vesper to see his
-  detail open, or use the button below to simulate his standing
-  changing on both screens at once.</p>
+  actually encounter it — now with the activity behind the standing,
+  not just the label. Open Vesper's <strong>History</strong> tab on the
+  phone, or click his row in the console, to see it.</p>
 </header>
 
 <div class="toggle-row">
@@ -336,36 +424,47 @@
 
 <div class="stage">
   <div>
-    <p class="panel-label">Vesper's phone — Availability screen</p>
+    <p class="panel-label">Vesper's phone</p>
     <div class="phone">
       <div class="phone-screen">
         <div class="phone-notch"></div>
         <div class="phone-header">
           <div class="app-name">ROOK DISPATCH</div>
-          <div class="screen-title">Availability</div>
+          <div class="screen-title" id="phone-screen-title">Availability</div>
         </div>
 
         <div class="phone-body">
-          <div class="avail-toggle-row">
-            <span class="lbl">Available for callouts</span>
-            <div class="pill"></div>
+
+          <div class="tab-panel" data-panel="offers">
+            <div class="offer-card">
+              <div class="title">No active offer</div>
+              Callouts will appear here when one comes in.
+            </div>
           </div>
 
-          <div class="standing-card steady" id="standing-card">
-            <p class="status" id="standing-status">Response standing: Steady</p>
-            <p class="detail" id="standing-detail">You're in normal rotation. Nothing to do here.</p>
+          <div class="tab-panel active" data-panel="availability">
+            <div class="avail-toggle-row">
+              <span class="lbl">Available for callouts</span>
+              <div class="pill"></div>
+            </div>
+
+            <div class="standing-card steady" id="standing-card">
+              <p class="status" id="standing-status">Response standing: Steady</p>
+              <p class="detail" id="standing-detail">You're in normal rotation. Nothing to do here.</p>
+            </div>
           </div>
 
-          <div class="offer-card">
-            <div class="title">No active offer</div>
-            Callouts will appear here when one comes in.
+          <div class="tab-panel" data-panel="history">
+            <p class="chart-intro">Your last 10 weeks — how many offers you got, and how many you took.</p>
+            <div id="phone-chart"></div>
           </div>
+
         </div>
 
         <div class="phone-tabbar">
-          <div>Offers</div>
-          <div class="active">Availability</div>
-          <div>History</div>
+          <button class="tab-btn" data-tab="offers">Offers</button>
+          <button class="tab-btn active" data-tab="availability">Availability</button>
+          <button class="tab-btn" data-tab="history">History</button>
         </div>
       </div>
     </div>
@@ -389,8 +488,9 @@
           <div class="chip steady" id="console-chip">Steady</div>
         </div>
         <div class="detail-panel" id="vesper-detail">
-          <div class="inner" id="vesper-detail-text">
-            Taking offers normally. No action needed.
+          <div class="inner">
+            <p id="vesper-detail-text" style="margin: 0 0 10px;">Taking offers normally. No action needed.</p>
+            <div id="console-chart"></div>
           </div>
         </div>
 
@@ -408,17 +508,147 @@
 </div>
 
 <footer>
-  Only the standing card, the chip, and Vesper's roster row respond —
-  the tabs and the availability switch are static chrome, there to
-  show which real screen this lives on: the responder's Availability
-  screen, and the handler's Coverage view. This file is static markup,
-  not a connected build; it exists to make the two-screen idea
-  concrete enough to click through, not to demonstrate working
-  software. See <strong>brief.md</strong> for the reasoning.
+  Bars respond on hover and on keyboard focus — each shows offered vs.
+  taken for that week. The plain list under the phone's History tab
+  carries the same numbers for anyone who'd rather not hover. Data is
+  Vesper's real weekly rows from <code>callout-history.csv</code>, not
+  invented. Console/incidents/responders tabs and the availability
+  switch are static chrome, there to show which real screen this lives
+  on. This file is static markup, not a connected build. See
+  <strong>brief.md</strong> for the reasoning.
 </footer>
 
+<div class="chart-tooltip" id="tooltip"></div>
+
 <script>
-  const btn = document.getElementById('toggle');
+  /* ---- Real weekly rows for Vesper, from 00-rook/data/callout-history.csv ---- */
+  const VESPER_HISTORY = [
+    { week: "Jun 29", sent: 14, taken: 11 },
+    { week: "Jul 6",  sent: 13, taken: 10 },
+    { week: "Jul 13", sent: 15, taken: 13 },
+    { week: "Jul 20", sent: 14, taken: 11 },
+    { week: "Jul 27", sent: 13, taken: 11 },
+    { week: "Aug 3",  sent: 14, taken: 12 },
+    { week: "Aug 10", sent: 12, taken: 6  },
+    { week: "Aug 17", sent: 5,  taken: 1  },
+    { week: "Aug 24", sent: 2,  taken: 0  },
+    { week: "Aug 31", sent: 1,  taken: 0  }
+  ];
+
+  const tooltip = document.getElementById('tooltip');
+
+  function showTooltip(el, row) {
+    const rect = el.getBoundingClientRect();
+    tooltip.innerHTML = '';
+    const v = document.createElement('div');
+    v.className = 'v';
+    v.textContent = row.taken + ' of ' + row.sent + ' taken';
+    const l = document.createElement('div');
+    l.className = 'l';
+    l.textContent = 'Week of ' + row.week;
+    tooltip.appendChild(v);
+    tooltip.appendChild(l);
+    tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+    tooltip.style.top = (rect.top - 8) + 'px';
+    tooltip.classList.add('show');
+  }
+  function hideTooltip() {
+    tooltip.classList.remove('show');
+  }
+
+  function renderActivityChart(mountId, data, opts) {
+    const mount = document.getElementById(mountId);
+    const chartHeight = (opts && opts.height) || 70;
+    const maxSent = Math.max(...data.map(function (d) { return d.sent; }));
+
+    const legend = document.createElement('div');
+    legend.className = 'chart-legend';
+    legend.innerHTML =
+      '<span class="key"><span class="swatch taken"></span>Taken</span>' +
+      '<span class="key"><span class="swatch rest"></span>Not taken</span>';
+    mount.appendChild(legend);
+
+    const row = document.createElement('div');
+    row.className = 'chart-row';
+    row.style.setProperty('--chart-h', chartHeight + 'px');
+
+    data.forEach(function (d) {
+      const wrap = document.createElement('div');
+      wrap.className = 'bar-wrap';
+      wrap.tabIndex = 0;
+      wrap.setAttribute('aria-label', 'Week of ' + d.week + ': ' + d.taken + ' of ' + d.sent + ' offers taken');
+
+      const track = document.createElement('div');
+      track.className = 'bar-track';
+      const totalH = Math.max(4, Math.round((d.sent / maxSent) * chartHeight));
+      track.style.height = totalH + 'px';
+
+      const fill = document.createElement('div');
+      fill.className = 'bar-fill';
+      const fillH = d.sent > 0 ? Math.round((d.taken / d.sent) * totalH) : 0;
+      fill.style.height = fillH + 'px';
+
+      track.appendChild(fill);
+      wrap.appendChild(track);
+      row.appendChild(wrap);
+
+      wrap.addEventListener('mouseenter', function () { showTooltip(wrap, d); });
+      wrap.addEventListener('mouseleave', hideTooltip);
+      wrap.addEventListener('focus', function () { showTooltip(wrap, d); });
+      wrap.addEventListener('blur', hideTooltip);
+    });
+    mount.appendChild(row);
+
+    const axis = document.createElement('div');
+    axis.className = 'chart-axis';
+    const first = document.createElement('span');
+    first.textContent = data[0].week;
+    const last = document.createElement('span');
+    last.textContent = data[data.length - 1].week;
+    axis.appendChild(first);
+    axis.appendChild(last);
+    mount.appendChild(axis);
+
+    if (opts && opts.withList) {
+      const list = document.createElement('div');
+      list.className = 'activity-list';
+      data.slice().reverse().forEach(function (d) {
+        const r = document.createElement('div');
+        r.className = 'row';
+        const label = document.createElement('span');
+        label.textContent = 'Week of ' + d.week;
+        const value = document.createElement('span');
+        value.textContent = d.taken + ' of ' + d.sent + ' taken';
+        r.appendChild(label);
+        r.appendChild(value);
+        list.appendChild(r);
+      });
+      mount.appendChild(list);
+    }
+  }
+
+  renderActivityChart('phone-chart', VESPER_HISTORY, { height: 76, withList: true });
+  renderActivityChart('console-chart', VESPER_HISTORY, { height: 44, withList: false });
+
+  /* ---- Phone tab switching ---- */
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  const screenTitle = document.getElementById('phone-screen-title');
+  const titles = { offers: 'Offers', availability: 'Availability', history: 'History' };
+
+  tabButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      tabButtons.forEach(function (b) { b.classList.remove('active'); });
+      panels.forEach(function (p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      const key = btn.getAttribute('data-tab');
+      document.querySelector('.tab-panel[data-panel="' + key + '"]').classList.add('active');
+      screenTitle.textContent = titles[key];
+    });
+  });
+
+  /* ---- Standing simulate toggle ---- */
+  const toggleBtn = document.getElementById('toggle');
   const hint = document.getElementById('toggle-hint');
   const card = document.getElementById('standing-card');
   const status = document.getElementById('standing-status');
@@ -443,7 +673,7 @@
       chip.className = 'chip recovering';
       chip.textContent = 'Recovering';
       detailText.textContent = RECOVERING_CONSOLE_DETAIL;
-      btn.textContent = 'Simulate: standing changes to Steady';
+      toggleBtn.textContent = 'Simulate: standing changes to Steady';
       hint.textContent = 'Currently showing: Recovering';
     } else {
       card.className = 'standing-card steady';
@@ -452,17 +682,17 @@
       chip.className = 'chip steady';
       chip.textContent = 'Steady';
       detailText.textContent = STEADY_CONSOLE_DETAIL;
-      btn.textContent = 'Simulate: standing changes to Recovering';
+      toggleBtn.textContent = 'Simulate: standing changes to Recovering';
       hint.textContent = 'Currently showing: Steady';
     }
   }
 
-  btn.addEventListener('click', () => {
+  toggleBtn.addEventListener('click', function () {
     recovering = !recovering;
     render();
   });
 
-  vesperRow.addEventListener('click', () => {
+  vesperRow.addEventListener('click', function () {
     detailPanel.classList.toggle('open');
   });
 </script>
